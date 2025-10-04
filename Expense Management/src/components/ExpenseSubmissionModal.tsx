@@ -4,8 +4,9 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/custom-select';
 import { Card, CardContent } from './ui/card';
+import { DatePicker } from './ui/date-picker';
 import { Upload, Camera, X, Sparkles, DollarSign, Calendar, FileText, Tag } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 
@@ -40,7 +41,7 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
   const [amount, setAmount] = useState('');
   const [currency, setCurrency] = useState('USD');
   const [category, setCategory] = useState('');
-  const [date, setDate] = useState('');
+  const [date, setDate] = useState<Date | undefined>(undefined);
   const [description, setDescription] = useState('');
   const [receipt, setReceipt] = useState<File | null>(null);
   const [ocrProcessing, setOcrProcessing] = useState(false);
@@ -53,13 +54,13 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
       category,
       amount: parseFloat(amount),
       currency,
-      date
+      date: date ? date.toISOString().split('T')[0] : ''
     });
     // Reset form
     setAmount('');
     setCurrency('USD');
     setCategory('');
-    setDate('');
+    setDate(undefined);
     setDescription('');
     setReceipt(null);
     setOcrError('');
@@ -78,7 +79,7 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
       // Mock OCR results
       const mockOcrResults = {
         amount: '45.99',
-        date: '2024-01-28',
+        date: new Date('2024-01-28'),
         description: 'Restaurant receipt - business lunch'
       };
 
@@ -253,13 +254,11 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
                 <Calendar className="h-4 w-4 text-blue-600" />
                 Date of Expense
               </Label>
-              <Input
-                id="date"
-                type="date"
+              <DatePicker
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                className="h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
+                onChange={setDate}
+                placeholder="Select expense date"
+                className="h-12"
               />
             </div>
           </div>

@@ -7,7 +7,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/custom-select';
 import { Switch } from './ui/switch';
 import { Separator } from './ui/separator';
 import { Badge } from './ui/badge';
@@ -23,7 +23,6 @@ import {
   DollarSign,
   Globe,
   Bell,
-  Palette,
   MapPin,
   Loader2,
   RefreshCw
@@ -486,30 +485,6 @@ export default function Settings({ onBack }: SettingsProps) {
                 </p>
               </div>
             )}
-          </CardContent>
-        </Card>
-
-        {/* Theme & Display */}
-        <Card className="shadow-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <Palette className="h-5 w-5 text-purple-500" />
-              Theme & Display
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Compact View</Label>
-                  <p className="text-sm text-muted-foreground">Use compact layout for lists</p>
-                </div>
-                <Switch
-                  checked={settings.compactView}
-                  onCheckedChange={(checked) => setSettings({...settings, compactView: checked})}
-                />
-              </div>
-            </div>
           </CardContent>
         </Card>
 

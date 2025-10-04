@@ -1,0 +1,102 @@
+.custom-calendar {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 400px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  gap: 12px;
+}
+
+.calendar-month-dropdown,
+.calendar-year-dropdown {
+  flex: 1;
+}
+
+.calendar-day-names {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.calendar-day-name {
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: #2a2a2a;
+  padding: 8px 4px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day-empty {
+  height: 44px;
+}
+
+.calendar-day {
+  height: 44px;
+  border: none;
+  background: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #2a2a2a;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-day:hover {
+  background: #f0f0f0;
+  transform: scale(1.05);
+}
+
+.calendar-day.today {
+  background: #00bcd4;
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-day.selected {
+  background: #4285f4;
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-day.today.selected {
+  background: #00bcd4;
+}
+
+/* Scrollbar styling for dropdown */
+.calendar-dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.calendar-dropdown-menu::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.calendar-dropdown-menu::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.calendar-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
