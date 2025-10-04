@@ -1,160 +1,122 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiService from '../services/api';
 
 interface User {
   id: string;
   email: string;
   fullName: string;
   role: 'employee' | 'manager' | 'admin';
-  managerId?: string;
-  country: string;
-  companyId: string;
-}
-
-interface Company {
-  id: string;
-  name: string;
-  defaultCurrency: string;
-  country: string;
+  username: string;
+  company?: any;
 }
 
 interface AuthContextType {
   user: User | null;
-  company: Company | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  signup: (fullName: string, email: string, password: string, country: string) => Promise<boolean>;
+  login: (username: string, password: string) => Promise<boolean>;
+  signup: (userData: any) => Promise<boolean>;
   logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock data
-const mockUsers: User[] = [
-  {
-    id: '1',
-    email: 'john.employee@company.com',
-    fullName: 'John Employee',
-    role: 'employee',
-    managerId: '2',
-    country: 'US',
-    companyId: 'company1'
-  },
-  {
-    id: '2',
-    email: 'jane.manager@company.com',
-    fullName: 'Jane Manager',
-    role: 'manager',
-    country: 'US',
-    companyId: 'company1'
-  },
-  {
-    id: '3',
-    email: 'bob.admin@company.com',
-    fullName: 'Bob Admin',
-    role: 'admin',
-    country: 'US',
-    companyId: 'company1'
-  }
-];
-
-const mockCompanies: Company[] = [
-  {
-    id: 'company1',
-    name: 'Acme Corp',
-    defaultCurrency: 'USD',
-    country: 'US'
-  }
-];
-
-const countryToCurrency: Record<string, string> = {
-  'US': 'USD',
-  'UK': 'GBP',
-  'CA': 'CAD',
-  'DE': 'EUR',
-  'FR': 'EUR',
-  'JP': 'JPY',
-  'AU': 'AUD',
-  'IN': 'INR'
-};
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [company, setCompany] = useState<Company | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored user session
-    const storedUser = localStorage.getItem('currentUser');
-    if (storedUser) {
-      const userData = JSON.parse(storedUser);
-      setUser(userData);
-      const userCompany = mockCompanies.find(c => c.id === userData.companyId);
-      setCompany(userCompany || null);
-    }
-    setLoading(false);
+    // Check if user is logged in by checking for token and fetching user data
+    const checkAuth = async () => {
+      const token = localStorage.getItem('access_token');
+      if (token) {
+        try {
+          const userData = await apiService.getCurrentUser();
+          setUser({
+            id: userData.id,
+            email: userData.email,
+            fullName: userData.fullName,
+            role: userData.role as 'employee' | 'manager' | 'admin',
+            username: userData.username,
+            company: userData.company
+          });
+        } catch (error) {
+          console.error('Auth check failed:', error);
+          // Token might be expired or invalid
+          apiService.logout();
+        }
+      }
+      setLoading(false);
+    };
+
+    checkAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser) {
-      setUser(foundUser);
-      const userCompany = mockCompanies.find(c => c.id === foundUser.companyId);
-      setCompany(userCompany || null);
-      localStorage.setItem('currentUser', JSON.stringify(foundUser));
+  const login = async (username: string, password: string): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const loginData = await apiService.login(username, password);
+      
+      // Set user data from login response
+      const userInfo: User = {
+        id: loginData.user.id,
+        email: loginData.user.email,
+        fullName: loginData.user.fullName,
+        role: loginData.user.role as 'employee' | 'manager' | 'admin',
+        username: loginData.user.username,
+        company: loginData.user.company
+      };
+      
+      setUser(userInfo);
       return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
+    } finally {
+      setLoading(false);
     }
-    return false;
   };
 
-  const signup = async (fullName: string, email: string, password: string, country: string): Promise<boolean> => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Check if user already exists
-    if (mockUsers.find(u => u.email === email)) {
+  const signup = async (userData: {
+    username: string;
+    email: string;
+    password: string;
+    firstName: string;
+    lastName: string;
+    companyName?: string;
+    country?: string;
+  }): Promise<boolean> => {
+    try {
+      setLoading(true);
+      const signupData = await apiService.register(userData);
+      
+      // Set user data from signup response
+      const userInfo: User = {
+        id: signupData.user.id,
+        email: signupData.user.email,
+        fullName: signupData.user.fullName,
+        role: signupData.user.role as 'employee' | 'manager' | 'admin',
+        username: signupData.user.username,
+        company: signupData.user.company
+      };
+      
+      setUser(userInfo);
+      return true;
+    } catch (error) {
+      console.error('Signup failed:', error);
       return false;
+    } finally {
+      setLoading(false);
     }
-
-    // Create new company for first user
-    const newCompany: Company = {
-      id: `company_${Date.now()}`,
-      name: `${fullName.split(' ')[0]}'s Company`,
-      defaultCurrency: countryToCurrency[country] || 'USD',
-      country: country
-    };
-
-    const newUser: User = {
-      id: `user_${Date.now()}`,
-      email,
-      fullName,
-      role: 'admin', // First user becomes admin
-      country,
-      companyId: newCompany.id
-    };
-
-    // In real app, this would be saved to database
-    mockUsers.push(newUser);
-    mockCompanies.push(newCompany);
-
-    setUser(newUser);
-    setCompany(newCompany);
-    localStorage.setItem('currentUser', JSON.stringify(newUser));
-    return true;
   };
 
   const logout = () => {
+    apiService.logout();
     setUser(null);
-    setCompany(null);
-    localStorage.removeItem('currentUser');
   };
 
   return (
     <AuthContext.Provider value={{
       user,
-      company,
       loading,
       login,
       signup,

@@ -10,7 +10,7 @@ import { ThemeToggle } from './ThemeToggle';
 import { Eye, EyeOff, Mail, Lock, Sparkles, TrendingUp, Shield, Users } from 'lucide-react';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,9 +23,9 @@ export default function LoginPage() {
     setError('');
 
     try {
-      const success = await login(email, password);
+      const success = await login(username, password);
       if (!success) {
-        setError('Invalid email or password');
+        setError('Invalid username or password');
       }
     } catch (err) {
       setError('An error occurred during login');
@@ -130,16 +130,16 @@ export default function LoginPage() {
             <CardContent className="space-y-6">
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                  <Label htmlFor="username" className="text-sm font-medium">Username</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      id="username"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
                       required
-                      placeholder="Enter your email"
+                      placeholder="Enter your username"
                       className="pl-10 h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-blue-500 dark:focus:border-blue-400"
                     />
                   </div>
@@ -210,15 +210,15 @@ export default function LoginPage() {
                 <div className="text-xs text-blue-700 dark:text-blue-300 space-y-2">
                   <div className="flex justify-between">
                     <span className="font-medium">Employee:</span>
-                    <span>john.employee@company.com</span>
+                    <span>employee</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Manager:</span>
-                    <span>jane.manager@company.com</span>
+                    <span>manager</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="font-medium">Admin:</span>
-                    <span>bob.admin@company.com</span>
+                    <span>admin</span>
                   </div>
                   <div className="text-center pt-2 border-t border-blue-200 dark:border-blue-700">
                     <span className="text-blue-600 dark:text-blue-400 font-medium">Password: any text</span>
