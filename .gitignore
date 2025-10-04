@@ -35,3 +35,4 @@ frontend/build/
 .idea/
 *.swp
 *.swo
+.kiro
