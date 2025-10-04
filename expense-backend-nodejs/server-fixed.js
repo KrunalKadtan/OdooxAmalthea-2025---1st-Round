@@ -12,11 +12,11 @@ const PORT = process.env.PORT || 8000;
 // SQLite setup
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: path.join(__dirname, 'simple.sqlite'),
-  logging: false
+  storage: path.join(__dirname, 'expense.sqlite'),
+  logging: console.log
 });
 
-// Simple User model
+// User model
 const User = sequelize.define('User', {
   username: { type: DataTypes.STRING, unique: true, allowNull: false },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
@@ -27,7 +27,7 @@ const User = sequelize.define('User', {
   managerId: { type: DataTypes.INTEGER, allowNull: true }
 });
 
-// Simple Expense model
+// Expense model
 const Expense = sequelize.define('Expense', {
   employeeId: { type: DataTypes.INTEGER, allowNull: false },
   amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
@@ -37,7 +37,8 @@ const Expense = sequelize.define('Expense', {
   date: { type: DataTypes.DATEONLY, allowNull: false },
   status: { type: DataTypes.STRING, defaultValue: 'pending' },
   rejectionReason: { type: DataTypes.TEXT, allowNull: true },
-  reviewedById: { type: DataTypes.INTEGER, allowNull: true }
+  reviewedById: { type: DataTypes.INTEGER, allowNull: true },
+  reviewedAt: { type: DataTypes.DATE, allowNull: true }
 });
 
 // Define associations
@@ -83,11 +84,11 @@ const authenticate = async (req, res, next) => {
 app.use(cors());
 app.use(express.json());
 
-// Routes
+// Health check
 app.get('/health', (req, res) => {
   res.json({
     success: true,
-    message: 'Simple SQLite server is running!',
+    message: 'Expense Management Server is running!',
     database: 'SQLite'
   });
 });
@@ -95,7 +96,7 @@ app.get('/health', (req, res) => {
 app.get('/api/test', (req, res) => {
   res.json({
     success: true,
-    message: 'API is working with SQLite!',
+    message: 'API is working!',
     database: 'SQLite'
   });
 });
@@ -374,12 +375,15 @@ app.post('/api/expenses/:id/reject', authenticate, async (req, res) => {
 // Initialize database and start server
 async function startServer() {
   try {
+    console.log('🔄 Connecting to SQLite database...');
     await sequelize.authenticate();
     console.log('✅ SQLite Connected');
     
+    console.log('🔄 Syncing database schema...');
     await sequelize.sync({ force: true });
     console.log('✅ Database synced with fresh schema');
     
+    console.log('🔄 Creating test users...');
     // Create test users
     const users = [
       { username: 'admin', email: 'admin@test.com', password: 'admin123', firstName: 'Bob', lastName: 'Admin', role: 'admin' },
@@ -390,24 +394,18 @@ async function startServer() {
     
     const createdUsers = {};
     for (const userData of users) {
-      const existingUser = await User.findOne({ where: { username: userData.username } });
-      if (!existingUser) {
-        const user = await User.create(userData);
-        createdUsers[userData.username] = user;
-        console.log(`✅ Created user: ${userData.username}`);
-      } else {
-        createdUsers[userData.username] = existingUser;
-      }
+      const user = await User.create(userData);
+      createdUsers[userData.username] = user;
+      console.log(`✅ Created user: ${userData.username} (${userData.role})`);
     }
 
+    console.log('🔄 Setting up manager relationships...');
     // Set manager relationships
-    if (createdUsers.employee && createdUsers.manager) {
-      await createdUsers.employee.update({ managerId: createdUsers.manager.id });
-    }
-    if (createdUsers.sarah && createdUsers.manager) {
-      await createdUsers.sarah.update({ managerId: createdUsers.manager.id });
-    }
+    await createdUsers.employee.update({ managerId: createdUsers.manager.id });
+    await createdUsers.sarah.update({ managerId: createdUsers.manager.id });
+    console.log('✅ Manager relationships set');
 
+    console.log('🔄 Creating sample expenses...');
     // Create sample expenses
     const sampleExpenses = [
       {
@@ -427,7 +425,8 @@ async function startServer() {
         description: 'Flight to client meeting in New York',
         date: '2024-01-10',
         status: 'approved_manager',
-        reviewedById: createdUsers.manager.id
+        reviewedById: createdUsers.manager.id,
+        reviewedAt: new Date()
       },
       {
         employeeId: createdUsers.sarah.id,
@@ -438,7 +437,8 @@ async function startServer() {
         date: '2024-01-08',
         status: 'rejected',
         rejectionReason: 'Receipt not clear enough to verify items',
-        reviewedById: createdUsers.manager.id
+        reviewedById: createdUsers.manager.id,
+        reviewedAt: new Date()
       },
       {
         employeeId: createdUsers.sarah.id,
@@ -452,36 +452,35 @@ async function startServer() {
     ];
 
     for (const expenseData of sampleExpenses) {
-      const existingExpense = await Expense.findOne({ 
-        where: { 
-          employeeId: expenseData.employeeId,
-          description: expenseData.description 
-        }
-      });
-      
-      if (!existingExpense) {
-        await Expense.create(expenseData);
-        console.log(`✅ Created expense: ${expenseData.description.substring(0, 30)}...`);
-      }
+      await Expense.create(expenseData);
+      console.log(`✅ Created expense: ${expenseData.description.substring(0, 30)}...`);
     }
     
+    console.log('🚀 Starting server...');
     app.listen(PORT, () => {
       console.log(`
-🚀 Simple SQLite Server Running!
+🎉 Expense Management Server Running Successfully!
 📍 Port: ${PORT}
 🌐 Health: http://localhost:${PORT}/health
 🔗 API: http://localhost:${PORT}/api/test
 🔐 Login: POST http://localhost:${PORT}/api/auth/login
 
 👤 Test Credentials:
-   admin / admin123
-   manager / manager123
-   employee / employee123
+   admin / admin123 (Admin - sees all expenses)
+   manager / manager123 (Manager - sees team expenses, can approve/reject)
+   employee / employee123 (Employee - sees own expenses, can submit)
+   sarah / sarah123 (Employee - sees own expenses, can submit)
+
+🔄 Workflow:
+1. Employee submits expense → Status: pending
+2. Manager approves/rejects → Status: approved_manager/rejected
+3. Admin sees all approved expenses
       `);
     });
     
   } catch (error) {
     console.error('❌ Server startup failed:', error);
+    process.exit(1);
   }
 }
 

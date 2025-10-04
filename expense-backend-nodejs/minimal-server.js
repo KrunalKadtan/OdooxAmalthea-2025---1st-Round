@@ -1,22 +1,23 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { Sequelize, DataTypes } = require('sequelize');
+const { Sequelize, DataTypes, Op } = require('sequelize');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 8000;
+const PORT = 8000;
+
+console.log('🔄 Starting Minimal Expense Server...');
 
 // SQLite setup
 const sequelize = new Sequelize({
   dialect: 'sqlite',
-  storage: path.join(__dirname, 'simple.sqlite'),
+  storage: path.join(__dirname, 'minimal.sqlite'),
   logging: false
 });
 
-// Simple User model
+// User model
 const User = sequelize.define('User', {
   username: { type: DataTypes.STRING, unique: true, allowNull: false },
   email: { type: DataTypes.STRING, unique: true, allowNull: false },
@@ -27,7 +28,7 @@ const User = sequelize.define('User', {
   managerId: { type: DataTypes.INTEGER, allowNull: true }
 });
 
-// Simple Expense model
+// Expense model
 const Expense = sequelize.define('Expense', {
   employeeId: { type: DataTypes.INTEGER, allowNull: false },
   amount: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
@@ -37,7 +38,8 @@ const Expense = sequelize.define('Expense', {
   date: { type: DataTypes.DATEONLY, allowNull: false },
   status: { type: DataTypes.STRING, defaultValue: 'pending' },
   rejectionReason: { type: DataTypes.TEXT, allowNull: true },
-  reviewedById: { type: DataTypes.INTEGER, allowNull: true }
+  reviewedById: { type: DataTypes.INTEGER, allowNull: true },
+  reviewedAt: { type: DataTypes.DATE, allowNull: true }
 });
 
 // Define associations
@@ -85,22 +87,14 @@ app.use(express.json());
 
 // Routes
 app.get('/health', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Simple SQLite server is running!',
-    database: 'SQLite'
-  });
+  res.json({ success: true, message: 'Server is running!' });
 });
 
 app.get('/api/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'API is working with SQLite!',
-    database: 'SQLite'
-  });
+  res.json({ success: true, message: 'API is working!' });
 });
 
-// Authentication routes
+// Login route
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -143,6 +137,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Get profile
 app.get('/api/auth/profile', authenticate, async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
@@ -169,7 +164,7 @@ app.get('/api/auth/profile', authenticate, async (req, res) => {
   }
 });
 
-// Expense routes
+// Get expenses
 app.get('/api/expenses', authenticate, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -188,7 +183,7 @@ app.get('/api/expenses', authenticate, async (req, res) => {
         attributes: ['id']
       });
       const teamMemberIds = teamMembers.map(member => member.id);
-      whereClause.employeeId = { [require('sequelize').Op.in]: [userId, ...teamMemberIds] };
+      whereClause.employeeId = { [Op.in]: [userId, ...teamMemberIds] };
     }
     // Admin can see all expenses (no filter)
 
@@ -220,20 +215,33 @@ app.get('/api/expenses', authenticate, async (req, res) => {
   }
 });
 
+// Create expense
 app.post('/api/expenses', authenticate, async (req, res) => {
   try {
     const { amount, currency, category, description, date } = req.body;
     const userId = req.user.id;
 
+    console.log('Creating expense with data:', { amount, currency, category, description, date, userId });
+
+    // Validate required fields
+    if (!amount || !category || !description || !date) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: amount, category, description, date' 
+      });
+    }
+
     const expense = await Expense.create({
       employeeId: userId,
-      amount,
+      amount: parseFloat(amount),
       currency: currency || 'USD',
       category,
       description,
       date,
       status: 'pending'
     });
+
+    console.log('Expense created with ID:', expense.id);
 
     const createdExpense = await Expense.findByPk(expense.id, {
       include: [
@@ -248,14 +256,20 @@ app.post('/api/expenses', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Create expense error:', error);
-    res.status(500).json({ success: false, message: 'Failed to create expense' });
+    console.error('Error details:', error.message);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to create expense',
+      error: error.message 
+    });
   }
 });
 
+// Approve expense
 app.post('/api/expenses/:id/approve', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
-    const { comment } = req.body;
     const userId = req.user.id;
     const userRole = req.user.role;
 
@@ -309,6 +323,7 @@ app.post('/api/expenses/:id/approve', authenticate, async (req, res) => {
   }
 });
 
+// Reject expense
 app.post('/api/expenses/:id/reject', authenticate, async (req, res) => {
   try {
     const { id } = req.params;
@@ -371,16 +386,18 @@ app.post('/api/expenses/:id/reject', authenticate, async (req, res) => {
   }
 });
 
-// Initialize database and start server
-async function startServer() {
+// Initialize and start
+async function start() {
   try {
+    console.log('🔄 Connecting to database...');
     await sequelize.authenticate();
-    console.log('✅ SQLite Connected');
+    console.log('✅ Database connected');
     
+    console.log('🔄 Syncing database...');
     await sequelize.sync({ force: true });
-    console.log('✅ Database synced with fresh schema');
+    console.log('✅ Database synced');
     
-    // Create test users
+    console.log('🔄 Creating test users...');
     const users = [
       { username: 'admin', email: 'admin@test.com', password: 'admin123', firstName: 'Bob', lastName: 'Admin', role: 'admin' },
       { username: 'manager', email: 'manager@test.com', password: 'manager123', firstName: 'Jane', lastName: 'Manager', role: 'manager' },
@@ -390,26 +407,18 @@ async function startServer() {
     
     const createdUsers = {};
     for (const userData of users) {
-      const existingUser = await User.findOne({ where: { username: userData.username } });
-      if (!existingUser) {
-        const user = await User.create(userData);
-        createdUsers[userData.username] = user;
-        console.log(`✅ Created user: ${userData.username}`);
-      } else {
-        createdUsers[userData.username] = existingUser;
-      }
+      const user = await User.create(userData);
+      createdUsers[userData.username] = user;
+      console.log(`✅ Created user: ${userData.username}`);
     }
 
     // Set manager relationships
-    if (createdUsers.employee && createdUsers.manager) {
-      await createdUsers.employee.update({ managerId: createdUsers.manager.id });
-    }
-    if (createdUsers.sarah && createdUsers.manager) {
-      await createdUsers.sarah.update({ managerId: createdUsers.manager.id });
-    }
+    await createdUsers.employee.update({ managerId: createdUsers.manager.id });
+    await createdUsers.sarah.update({ managerId: createdUsers.manager.id });
+    console.log('✅ Manager relationships set');
 
     // Create sample expenses
-    const sampleExpenses = [
+    const expenses = [
       {
         employeeId: createdUsers.employee.id,
         amount: 45.99,
@@ -418,27 +427,6 @@ async function startServer() {
         description: 'Team lunch at downtown restaurant',
         date: '2024-01-15',
         status: 'pending'
-      },
-      {
-        employeeId: createdUsers.employee.id,
-        amount: 250.00,
-        currency: 'USD',
-        category: 'travel',
-        description: 'Flight to client meeting in New York',
-        date: '2024-01-10',
-        status: 'approved_manager',
-        reviewedById: createdUsers.manager.id
-      },
-      {
-        employeeId: createdUsers.sarah.id,
-        amount: 89.50,
-        currency: 'USD',
-        category: 'supplies',
-        description: 'Office supplies and equipment',
-        date: '2024-01-08',
-        status: 'rejected',
-        rejectionReason: 'Receipt not clear enough to verify items',
-        reviewedById: createdUsers.manager.id
       },
       {
         employeeId: createdUsers.sarah.id,
@@ -451,38 +439,29 @@ async function startServer() {
       }
     ];
 
-    for (const expenseData of sampleExpenses) {
-      const existingExpense = await Expense.findOne({ 
-        where: { 
-          employeeId: expenseData.employeeId,
-          description: expenseData.description 
-        }
-      });
-      
-      if (!existingExpense) {
-        await Expense.create(expenseData);
-        console.log(`✅ Created expense: ${expenseData.description.substring(0, 30)}...`);
-      }
+    for (const expenseData of expenses) {
+      await Expense.create(expenseData);
+      console.log(`✅ Created expense: ${expenseData.description.substring(0, 30)}...`);
     }
     
     app.listen(PORT, () => {
       console.log(`
-🚀 Simple SQLite Server Running!
+🎉 Expense Management Server Running!
 📍 Port: ${PORT}
 🌐 Health: http://localhost:${PORT}/health
 🔗 API: http://localhost:${PORT}/api/test
-🔐 Login: POST http://localhost:${PORT}/api/auth/login
 
 👤 Test Credentials:
    admin / admin123
-   manager / manager123
+   manager / manager123  
    employee / employee123
+   sarah / sarah123
       `);
     });
     
   } catch (error) {
-    console.error('❌ Server startup failed:', error);
+    console.error('❌ Startup failed:', error);
   }
 }
 
-startServer();
+start();

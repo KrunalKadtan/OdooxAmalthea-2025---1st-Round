@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import { Button } from './ui/button';
@@ -25,6 +25,8 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from './ThemeToggle';
 import ExpenseSubmissionModal from './ExpenseSubmissionModal';
+import apiService from '../services/api';
+import { toast } from 'sonner';
 
 interface Expense {
   id: string;
@@ -34,54 +36,21 @@ interface Expense {
   currency: string;
   date: string;
   status: 'pending' | 'approved_manager' | 'approved' | 'rejected';
-  submissionDate: string;
+  createdAt: string;
   rejectionReason?: string;
+  employee?: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+  };
+  reviewedBy?: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+  };
 }
-
-// Mock expense data
-const mockExpenses: Expense[] = [
-  {
-    id: '1',
-    description: 'Client dinner at downtown restaurant',
-    category: 'Meals',
-    amount: 125.50,
-    currency: 'USD',
-    date: '2024-01-15',
-    status: 'approved',
-    submissionDate: '2024-01-16'
-  },
-  {
-    id: '2',
-    description: 'Flight to Chicago for conference',
-    category: 'Travel',
-    amount: 450.00,
-    currency: 'USD',
-    date: '2024-01-20',
-    status: 'approved_manager',
-    submissionDate: '2024-01-21'
-  },
-  {
-    id: '3',
-    description: 'Office supplies - notebooks and pens',
-    category: 'Supplies',
-    amount: 35.75,
-    currency: 'USD',
-    date: '2024-01-25',
-    status: 'pending',
-    submissionDate: '2024-01-26'
-  },
-  {
-    id: '4',
-    description: 'Taxi to airport',
-    category: 'Travel',
-    amount: 28.00,
-    currency: 'USD',
-    date: '2024-01-22',
-    status: 'rejected',
-    submissionDate: '2024-01-23',
-    rejectionReason: 'Receipt not clear enough to verify amount'
-  }
-];
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -142,18 +111,43 @@ const getCategoryIcon = (category: string) => {
 export default function EmployeeDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [expenses, setExpenses] = useState(mockExpenses);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
   const [showSubmissionModal, setShowSubmissionModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
 
+  // Fetch expenses from API
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getExpenses({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        category: categoryFilter !== 'all' ? categoryFilter : undefined
+      });
+      setExpenses(response.expenses || []);
+    } catch (error) {
+      console.error('Failed to fetch expenses:', error);
+      toast.error('Failed to load expenses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refetch when filters change
+  useEffect(() => {
+    fetchExpenses();
+  }, [statusFilter, categoryFilter]);
+
   const filteredExpenses = expenses.filter((expense) => {
     const matchesSearch = expense.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          expense.category.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === "all" || expense.status === statusFilter;
-    const matchesCategory = categoryFilter === "all" || expense.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch;
   });
 
   const pendingExpenses = expenses.filter(e => e.status === 'pending');
@@ -162,14 +156,30 @@ export default function EmployeeDashboard() {
   const totalAmount = expenses.reduce((sum, expense) => sum + expense.amount, 0);
   const categories = [...new Set(expenses.map(e => e.category))];
 
-  const handleAddExpense = (newExpense: Omit<Expense, 'id' | 'submissionDate' | 'status'>) => {
-    const expense: Expense = {
-      ...newExpense,
-      id: `exp_${Date.now()}`,
-      submissionDate: new Date().toISOString().split('T')[0],
-      status: 'pending'
-    };
-    setExpenses([expense, ...expenses]);
+  const handleAddExpense = async (newExpense: {
+    description: string;
+    category: string;
+    amount: number;
+    currency: string;
+    date: string;
+  }) => {
+    try {
+      const createdExpense = await apiService.createExpense({
+        description: newExpense.description,
+        category: newExpense.category,
+        amount: newExpense.amount,
+        currency: newExpense.currency,
+        date: newExpense.date
+      });
+      
+      // Add to local state
+      setExpenses(prev => [createdExpense, ...prev]);
+      toast.success('Expense submitted successfully!');
+      setShowSubmissionModal(false);
+    } catch (error) {
+      console.error('Failed to create expense:', error);
+      toast.error('Failed to submit expense');
+    }
   };
 
   return (
@@ -363,7 +373,7 @@ export default function EmployeeDashboard() {
                               {new Date(expense.date).toLocaleDateString()}
                             </span>
                             <span className="text-sm text-muted-foreground">
-                              Submitted: {new Date(expense.submissionDate).toLocaleDateString()}
+                              Submitted: {new Date(expense.createdAt).toLocaleDateString()}
                             </span>
                           </div>
                         </div>

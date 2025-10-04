@@ -49,13 +49,19 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!amount || !category || !description || !date) {
+      return;
+    }
+
     onSubmit({
       description,
-      category,
+      category: category.toLowerCase(),
       amount: parseFloat(amount),
       currency,
-      date: date ? date.toISOString().split('T')[0] : ''
+      date: date.toISOString().split('T')[0]
     });
+    
     // Reset form
     setAmount('');
     setCurrency('USD');
@@ -64,7 +70,6 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
     setDescription('');
     setReceipt(null);
     setOcrError('');
-    onClose();
   };
 
   const handleReceiptUpload = async (file: File) => {

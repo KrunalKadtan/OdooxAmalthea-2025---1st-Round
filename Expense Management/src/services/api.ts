@@ -227,28 +227,37 @@ class ApiService {
     date: string;
     vendorName?: string;
   }, receiptFile?: File): Promise<Expense> {
-    const formData = new FormData();
-    
-    // Add expense data
-    Object.keys(expenseData).forEach(key => {
-      const value = expenseData[key as keyof typeof expenseData];
-      if (value !== undefined && value !== null) {
-        formData.append(key, value.toString());
-      }
-    });
-    
-    // Add receipt file if provided
+    // If there's a receipt file, use FormData
     if (receiptFile) {
+      const formData = new FormData();
+      
+      // Add expense data
+      Object.keys(expenseData).forEach(key => {
+        const value = expenseData[key as keyof typeof expenseData];
+        if (value !== undefined && value !== null) {
+          formData.append(key, value.toString());
+        }
+      });
+      
       formData.append('receipt', receiptFile);
+      
+      const response = await fetch(`${this.baseURL}/expenses`, {
+        method: 'POST',
+        headers: this.getFileHeaders(),
+        body: formData,
+      });
+      
+      return this.handleResponse<Expense>(response);
+    } else {
+      // For simple expense creation without file, use JSON
+      const response = await fetch(`${this.baseURL}/expenses`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(expenseData),
+      });
+      
+      return this.handleResponse<Expense>(response);
     }
-    
-    const response = await fetch(`${this.baseURL}/expenses`, {
-      method: 'POST',
-      headers: this.getFileHeaders(),
-      body: formData,
-    });
-    
-    return this.handleResponse<Expense>(response);
   }
 
   async updateExpense(id: string, expenseData: {

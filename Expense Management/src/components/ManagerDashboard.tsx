@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "sonner";
 import { useAuth } from "./AuthContext";
@@ -42,66 +42,30 @@ import {
   Sparkles,
   Settings,
 } from "lucide-react";
+import apiService from '../services/api';
 
 interface Expense {
   id: string;
-  employeeName: string;
   amount: number;
   category: string;
   description: string;
   date: string;
-  status: "pending" | "approved_manager" | "approved_finance" | "rejected";
+  status: "pending" | "approved_manager" | "approved" | "rejected";
   rejectionReason?: string;
+  createdAt: string;
+  employee?: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+  };
+  reviewedBy?: {
+    id: string;
+    username: string;
+    firstName: string;
+    lastName: string;
+  };
 }
-
-const mockTeamHistory: Expense[] = [
-  {
-    id: "1",
-    employeeName: "John Employee",
-    amount: 250.0,
-    category: "Travel",
-    description: "Flight to client meeting in New York",
-    date: "2024-01-15",
-    status: "pending",
-  },
-  {
-    id: "2",
-    employeeName: "Sarah Developer",
-    amount: 45.99,
-    category: "Meals",
-    description: "Team lunch at downtown restaurant",
-    date: "2024-01-14",
-    status: "approved_manager",
-  },
-  {
-    id: "3",
-    employeeName: "Mike Designer",
-    amount: 89.5,
-    category: "Software",
-    description: "Adobe Creative Suite subscription",
-    date: "2024-01-13",
-    status: "pending",
-  },
-  {
-    id: "4",
-    employeeName: "Lisa Analyst",
-    amount: 320.0,
-    category: "Travel",
-    description: "Hotel accommodation for conference",
-    date: "2024-01-12",
-    status: "approved_manager",
-  },
-  {
-    id: "5",
-    employeeName: "Tom Developer",
-    amount: 15.75,
-    category: "Office Supplies",
-    description: "Notebook and pens",
-    date: "2024-01-11",
-    status: "rejected",
-    rejectionReason: "Personal items not covered",
-  },
-];
 
 const getStatusBadge = (status: string) => {
   switch (status) {
@@ -156,7 +120,8 @@ const getCategoryIcon = (category: string) => {
 export default function ManagerDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
-  const [expenses, setExpenses] = useState<Expense[]>(mockTeamHistory);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
@@ -171,22 +136,45 @@ export default function ManagerDashboard() {
     expense: Expense | null;
   }>({ isOpen: false, expense: null });
 
+  // Fetch expenses from API
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getExpenses({
+        status: statusFilter !== 'all' ? statusFilter : undefined,
+        category: categoryFilter !== 'all' ? categoryFilter : undefined
+      });
+      setExpenses(response.expenses || []);
+    } catch (error) {
+      console.error('Failed to fetch expenses:', error);
+      toast.error('Failed to load expenses');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Refetch when filters change
+  useEffect(() => {
+    fetchExpenses();
+  }, [statusFilter, categoryFilter]);
+
   const filteredExpenses = expenses.filter((expense) => {
+    const employeeName = expense.employee ? `${expense.employee.firstName} ${expense.employee.lastName}` : '';
     const matchesSearch =
-      expense.employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      employeeName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       expense.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus =
-      statusFilter === "all" || expense.status === statusFilter;
-    const matchesCategory =
-      categoryFilter === "all" || expense.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
+    return matchesSearch;
   });
 
   const pendingExpenses = filteredExpenses.filter(
     (e: Expense) => e.status === "pending"
   );
   const approvedExpenses = expenses.filter(
-    (e: Expense) => e.status === "approved_manager"
+    (e: Expense) => e.status === "approved_manager" || e.status === "approved"
   );
   const totalPendingAmount = pendingExpenses.reduce(
     (sum, expense) => sum + expense.amount,
@@ -197,34 +185,50 @@ export default function ManagerDashboard() {
     0
   );
 
-  const handleApprove = (expenseId: string) => {
-    setExpenses((prev: Expense[]) =>
-      prev.map((expense: Expense) =>
-        expense.id === expenseId
-          ? { ...expense, status: "approved_manager" as const }
-          : expense
-      )
-    );
-    toast.success("Expense approved successfully!");
+  const handleApprove = async (expenseId: string) => {
+    try {
+      await apiService.approveExpense(expenseId, 'Approved by manager');
+      
+      // Update local state
+      setExpenses((prev: Expense[]) =>
+        prev.map((expense: Expense) =>
+          expense.id === expenseId
+            ? { ...expense, status: "approved_manager" as const }
+            : expense
+        )
+      );
+      toast.success("Expense approved successfully!");
+    } catch (error) {
+      console.error('Failed to approve expense:', error);
+      toast.error('Failed to approve expense');
+    }
   };
 
-  const handleReject = () => {
+  const handleReject = async () => {
     if (!rejectionReason.trim()) {
       toast.error("Please provide a rejection reason.");
       return;
     }
 
-    setExpenses((prev: Expense[]) =>
-      prev.map((expense: Expense) =>
-        expense.id === rejectionModal.expenseId
-          ? { ...expense, status: "rejected" as const, rejectionReason }
-          : expense
-      )
-    );
+    try {
+      await apiService.rejectExpense(rejectionModal.expenseId, rejectionReason);
+      
+      // Update local state
+      setExpenses((prev: Expense[]) =>
+        prev.map((expense: Expense) =>
+          expense.id === rejectionModal.expenseId
+            ? { ...expense, status: "rejected" as const, rejectionReason }
+            : expense
+        )
+      );
 
-    toast.error(`Expense rejected for ${rejectionModal.employeeName}`);
-    setRejectionModal({ isOpen: false, expenseId: "", employeeName: "" });
-    setRejectionReason("");
+      toast.success(`Expense rejected`);
+      setRejectionModal({ isOpen: false, expenseId: "", employeeName: "" });
+      setRejectionReason("");
+    } catch (error) {
+      console.error('Failed to reject expense:', error);
+      toast.error('Failed to reject expense');
+    }
   };
 
   const openRejectionModal = (expenseId: string, employeeName: string) => {
