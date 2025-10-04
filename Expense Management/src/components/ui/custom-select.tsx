@@ -8,6 +8,7 @@ interface CustomSelectProps {
   placeholder?: string;
   className?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 interface CustomSelectTriggerProps {
@@ -64,7 +65,7 @@ const extractDisplayText = (children: React.ReactNode): Record<string, string> =
   return displayMap;
 };
 
-export function CustomSelect({ value, onValueChange, children, placeholder, className, required }: CustomSelectProps) {
+export function CustomSelect({ value, onValueChange, children, placeholder, className, required, disabled }: CustomSelectProps) {
   const options = extractOptions(children);
   const displayMap = extractDisplayText(children);
   
@@ -84,6 +85,7 @@ export function CustomSelect({ value, onValueChange, children, placeholder, clas
         options={displayOptions}
         value={value ? (displayMap[value] || value) : (placeholder || 'Select...')}
         onChange={handleChange}
+        disabled={disabled}
       />
     </div>
   );

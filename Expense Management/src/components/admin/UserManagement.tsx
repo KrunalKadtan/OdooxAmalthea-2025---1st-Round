@@ -112,28 +112,30 @@ export default function UserManagement() {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Manager</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Actions</TableHead>
+              <TableRow className="bg-gray-50 dark:bg-gray-800/50">
+                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Name</TableHead>
+                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Role</TableHead>
+                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Manager</TableHead>
+                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Status</TableHead>
+                <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/30">
                   <TableCell>
-                    <div className="font-medium">{user.name}</div>
-                    <div className="text-sm text-muted-foreground">{user.email}</div>
+                    <div className="font-semibold text-gray-900 dark:text-gray-100">{user.name}</div>
+                    <div className="text-sm text-muted-foreground font-medium">{user.email}</div>
                   </TableCell>
                   <TableCell>{getRoleBadge(user.role)}</TableCell>
-                  <TableCell>{user.manager || '—'}</TableCell>
+                  <TableCell className="text-gray-700 dark:text-gray-300 font-medium">{user.manager || '—'}</TableCell>
                   <TableCell>{getStatusBadge(user.status)}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm" onClick={() => setEditingUser(user)}><Edit className="h-3 w-3 mr-1" />Edit</Button>
-                      <Button variant="outline" size="sm" onClick={() => setDeactivatingUser(user)}>
+                      <Button variant="outline" size="sm" onClick={() => setEditingUser(user)} className="font-medium">
+                        <Edit className="h-3 w-3 mr-1" />Edit
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setDeactivatingUser(user)} className="font-medium">
                         {user.status === 'active' 
                           ? <><UserX className="h-3 w-3 mr-1 text-red-500"/>Deactivate</>
                           : <><UserCheck className="h-3 w-3 mr-1 text-green-500"/>Activate</>

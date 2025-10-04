@@ -75,7 +75,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-md bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl">
+      <DialogContent className="max-w-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl">
         <DialogHeader>
           <DialogTitle>Add New User</DialogTitle>
           <DialogDescription>
@@ -83,58 +83,69 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="user-name">Full Name *</Label>
-            <Input
-              id="user-name"
-              value={formData.fullName}
-              onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
-              placeholder="John Doe"
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Personal Information Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="user-name">Full Name *</Label>
+              <Input
+                id="user-name"
+                value={formData.fullName}
+                onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
+                placeholder="John Doe"
+                required
+                className="h-11"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="user-email">Email *</Label>
+              <Input
+                id="user-email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                placeholder="john.doe@company.com"
+                required
+                className="h-11"
+              />
+            </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="user-email">Email *</Label>
-            <Input
-              id="user-email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="john.doe@company.com"
-              required
-            />
-          </div>
+          {/* Role and Manager Section */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="user-role">Role</Label>
+              <Select 
+                value={formData.role} 
+                onValueChange={(value) => 
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    role: value as 'employee' | 'manager' | 'admin',
+                    managerId: value !== 'employee' ? '' : prev.managerId
+                  }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="employee">Employee</SelectItem>
+                  <SelectItem value="manager">Manager</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="user-role">Role</Label>
-            <Select 
-              value={formData.role} 
-              onValueChange={(value: 'employee' | 'manager' | 'admin') => 
-                setFormData(prev => ({ ...prev, role: value }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="employee">Employee</SelectItem>
-                <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {formData.role === 'employee' && (
             <div className="space-y-2">
               <Label htmlFor="user-manager">Manager</Label>
               <Select 
                 value={formData.managerId} 
                 onValueChange={(value) => setFormData(prev => ({ ...prev, managerId: value }))}
+                disabled={formData.role !== 'employee'}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a manager" />
+                <SelectTrigger className={formData.role !== 'employee' ? 'opacity-50' : ''}>
+                  <SelectValue placeholder={formData.role === 'employee' ? "Select a manager" : "Not applicable"} />
                 </SelectTrigger>
                 <SelectContent>
                   {availableManagers.map((manager) => (
@@ -144,9 +155,15 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                   ))}
                 </SelectContent>
               </Select>
+              {formData.role !== 'employee' && (
+                <p className="text-xs text-muted-foreground">
+                  Only employees need a manager assignment
+                </p>
+              )}
             </div>
-          )}
+          </div>
 
+          {/* Country Section */}
           <div className="space-y-2">
             <Label htmlFor="user-country">Country</Label>
             <Select 

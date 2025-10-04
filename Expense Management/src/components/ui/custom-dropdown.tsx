@@ -6,9 +6,10 @@ interface CustomDropdownProps {
   value: string;
   onChange: (value: string) => void;
   className?: string;
+  disabled?: boolean;
 }
 
-export function CustomDropdown({ options, value, onChange, className = "" }: CustomDropdownProps) {
+export function CustomDropdown({ options, value, onChange, className = "", disabled = false }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(options.indexOf(value));
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -44,7 +45,9 @@ export function CustomDropdown({ options, value, onChange, className = "" }: Cus
   }, [isOpen, selectedIndex]);
 
   const handleToggle = () => {
-    setIsOpen(!isOpen);
+    if (!disabled) {
+      setIsOpen(!isOpen);
+    }
   };
 
   const handleSelect = (option: string, index: number) => {
@@ -74,11 +77,12 @@ export function CustomDropdown({ options, value, onChange, className = "" }: Cus
     <div ref={dropdownRef} className={`custom-dropdown ${className}`}>
       <button
         type="button"
-        className="selected-option"
+        className={`selected-option ${disabled ? 'disabled' : ''}`}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
+        disabled={disabled}
       >
         {value}
       </button>
