@@ -281,7 +281,7 @@ export default function Settings({ onBack }: SettingsProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {apiLoading ? (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="loading" disabled>
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>Loading countries...</span>
@@ -332,7 +332,7 @@ export default function Settings({ onBack }: SettingsProps) {
                   </SelectTrigger>
                   <SelectContent>
                     {apiLoading ? (
-                      <SelectItem value="" disabled>
+                      <SelectItem value="loading" disabled>
                         <div className="flex items-center gap-2">
                           <Loader2 className="h-4 w-4 animate-spin" />
                           <span>Loading currencies...</span>
