@@ -616,7 +616,7 @@ export default function ManagerDashboard() {
             })
           }
         >
-          <DialogContent>
+          <DialogContent className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl">
             <DialogHeader>
               <DialogTitle>Reject Expense</DialogTitle>
               <DialogDescription>
@@ -667,7 +667,7 @@ export default function ManagerDashboard() {
             !open && setDetailsModal({ isOpen: false, expense: null })
           }
         >
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl">
             <DialogHeader>
               <DialogTitle>Expense Details</DialogTitle>
             </DialogHeader>

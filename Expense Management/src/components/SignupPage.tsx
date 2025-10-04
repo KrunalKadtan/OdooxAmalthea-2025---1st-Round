@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/custom-select';
 import { Alert, AlertDescription } from './ui/alert';
 import { ThemeToggle } from './ThemeToggle';
 import { Eye, EyeOff, Mail, Lock, User, Globe, Sparkles, CheckCircle, Star, Zap } from 'lucide-react';
@@ -133,7 +133,7 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <Card className="border-0 shadow-2xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm">
+          <Card className="border-0 shadow-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
             <CardHeader className="text-center pb-8">
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
                 Create Account
