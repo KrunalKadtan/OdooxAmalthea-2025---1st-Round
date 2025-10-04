@@ -94,7 +94,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                 onChange={(e) => setFormData(prev => ({ ...prev, fullName: e.target.value }))}
                 placeholder="John Doe"
                 required
-                className="h-11"
+                className="h-9"
               />
             </div>
 
@@ -107,7 +107,7 @@ export default function AddUserModal({ isOpen, onClose, onAddUser }: AddUserModa
                 onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
                 placeholder="john.doe@company.com"
                 required
-                className="h-11"
+                className="h-9"
               />
             </div>
           </div>

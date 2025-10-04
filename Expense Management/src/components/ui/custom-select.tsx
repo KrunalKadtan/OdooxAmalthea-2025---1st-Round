@@ -65,13 +65,56 @@ const extractDisplayText = (children: React.ReactNode): Record<string, string> =
   return displayMap;
 };
 
+// Extract trigger className from children
+const extractTriggerClassName = (children: React.ReactNode): string => {
+  let triggerClassName = '';
+  
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child) && child.type === CustomSelectTrigger) {
+      triggerClassName = child.props.className || '';
+    }
+  });
+  
+  return triggerClassName;
+};
+
+// Extract placeholder from SelectValue
+const extractPlaceholder = (children: React.ReactNode): string => {
+  let placeholder = '';
+  
+  React.Children.forEach(children, (child) => {
+    if (React.isValidElement(child) && child.type === CustomSelectTrigger) {
+      React.Children.forEach(child.props.children, (triggerChild) => {
+        if (React.isValidElement(triggerChild) && triggerChild.type === CustomSelectValue) {
+          placeholder = triggerChild.props.placeholder || '';
+        }
+      });
+    }
+  });
+  
+  return placeholder;
+};
+
 export function CustomSelect({ value, onValueChange, children, placeholder, className, required, disabled }: CustomSelectProps) {
   const options = extractOptions(children);
   const displayMap = extractDisplayText(children);
+  const triggerClassName = extractTriggerClassName(children);
+  const extractedPlaceholder = extractPlaceholder(children) || placeholder;
   
   // Convert options to display format
   const displayOptions = options.map(option => displayMap[option] || option);
-  const currentDisplayValue = value ? (displayMap[value] || value) : (placeholder || 'Select...');
+  
+  // Determine what to display in the dropdown button
+  let currentDisplayValue: string;
+  if (value && displayMap[value]) {
+    currentDisplayValue = displayMap[value];
+  } else if (value && value !== 'all' && value !== '') {
+    currentDisplayValue = value;
+  } else if (value === 'all') {
+    currentDisplayValue = displayMap['all'] || 'All';
+  } else {
+    currentDisplayValue = extractedPlaceholder || 'Select...';
+  }
   
   const handleChange = (displayValue: string) => {
     // Find the actual value from display value
@@ -83,9 +126,10 @@ export function CustomSelect({ value, onValueChange, children, placeholder, clas
     <div className={className}>
       <CustomDropdown
         options={displayOptions}
-        value={value ? (displayMap[value] || value) : (placeholder || 'Select...')}
+        value={currentDisplayValue}
         onChange={handleChange}
         disabled={disabled}
+        className={triggerClassName}
       />
     </div>
   );
@@ -93,6 +137,7 @@ export function CustomSelect({ value, onValueChange, children, placeholder, clas
 
 export function CustomSelectTrigger({ children, className }: CustomSelectTriggerProps) {
   // This is just for API compatibility - the actual trigger is handled by CustomDropdown
+  // We store the className for the parent Select component to use
   return null;
 }
 

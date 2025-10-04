@@ -156,7 +156,7 @@ export default function SignupPage() {
                       onChange={(e) => setFullName(e.target.value)}
                       required
                       placeholder="Enter your full name"
-                      className="pl-10 h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400"
+                      className="pl-10 h-9 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400"
                     />
                   </div>
                 </div>
@@ -172,7 +172,7 @@ export default function SignupPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       required
                       placeholder="Enter your email"
-                      className="pl-10 h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400"
+                      className="pl-10 h-9 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400"
                     />
                   </div>
                 </div>
@@ -188,7 +188,7 @@ export default function SignupPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       required
                       placeholder="Create a password"
-                      className="pl-10 pr-10 h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400"
+                      className="pl-10 pr-10 h-9 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400"
                     />
                     <button
                       type="button"
@@ -205,7 +205,7 @@ export default function SignupPage() {
                   <div className="relative">
                     <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
                     <Select value={country} onValueChange={setCountry} required>
-                      <SelectTrigger className="pl-10 h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400">
+                      <SelectTrigger className="pl-10 h-9 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400">
                         <SelectValue placeholder="Choose your country" />
                       </SelectTrigger>
                       <SelectContent>

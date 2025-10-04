@@ -11,12 +11,13 @@ interface CustomDropdownProps {
 
 export function CustomDropdown({ options, value, onChange, className = "", disabled = false }: CustomDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(options.indexOf(value));
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    setSelectedIndex(options.indexOf(value));
+    const index = options.findIndex(option => option === value);
+    setSelectedIndex(index >= 0 ? index : -1);
   }, [value, options]);
 
   useEffect(() => {
@@ -51,25 +52,39 @@ export function CustomDropdown({ options, value, onChange, className = "", disab
   };
 
   const handleSelect = (option: string, index: number) => {
-    onChange(option);
-    setSelectedIndex(index);
+    if (option && option !== value) {
+      onChange(option);
+      setSelectedIndex(index);
+    }
     setIsOpen(false);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
-      handleToggle();
+      if (isOpen && selectedIndex >= 0) {
+        handleSelect(options[selectedIndex], selectedIndex);
+      } else {
+        handleToggle();
+      }
     } else if (event.key === 'Escape') {
       setIsOpen(false);
-    } else if (event.key === 'ArrowDown' && isOpen) {
+    } else if (event.key === 'ArrowDown') {
       event.preventDefault();
-      const nextIndex = selectedIndex < options.length - 1 ? selectedIndex + 1 : 0;
-      setSelectedIndex(nextIndex);
-    } else if (event.key === 'ArrowUp' && isOpen) {
+      if (!isOpen) {
+        setIsOpen(true);
+      } else {
+        const nextIndex = selectedIndex < options.length - 1 ? selectedIndex + 1 : 0;
+        setSelectedIndex(nextIndex);
+      }
+    } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      const prevIndex = selectedIndex > 0 ? selectedIndex - 1 : options.length - 1;
-      setSelectedIndex(prevIndex);
+      if (!isOpen) {
+        setIsOpen(true);
+      } else {
+        const prevIndex = selectedIndex > 0 ? selectedIndex - 1 : options.length - 1;
+        setSelectedIndex(prevIndex);
+      }
     }
   };
 
@@ -84,7 +99,15 @@ export function CustomDropdown({ options, value, onChange, className = "", disab
         aria-expanded={isOpen}
         disabled={disabled}
       >
-        {value}
+        <span className="flex-1 text-left">{value}</span>
+        <svg 
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
       </button>
       
       <ul 

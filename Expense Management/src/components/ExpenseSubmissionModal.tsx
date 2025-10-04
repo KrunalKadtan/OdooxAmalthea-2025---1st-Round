@@ -208,14 +208,14 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
                 onChange={(e) => setAmount(e.target.value)}
                 required
                 placeholder="0.00"
-                className="h-12 text-lg font-semibold bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400"
+                className="h-9 text-base font-semibold bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400"
               />
             </div>
 
             <div className="space-y-3">
               <Label htmlFor="currency" className="text-sm font-semibold">Currency</Label>
               <Select value={currency} onValueChange={setCurrency} required>
-                <SelectTrigger className="h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400">
+                <SelectTrigger className="h-9 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-green-500 dark:focus:border-green-400">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -236,8 +236,10 @@ export default function ExpenseSubmissionModal({ isOpen, onClose, onSubmit }: Ex
                 Category
               </Label>
               <Select value={category} onValueChange={setCategory} required>
-                <SelectTrigger className="h-12 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400">
-                  <SelectValue placeholder="Select category" />
+                <SelectTrigger 
+                className="h-9 bg-white/50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600 focus:border-purple-500 dark:focus:border-purple-400"
+                >
+  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((cat) => (

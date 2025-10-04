@@ -6,44 +6,109 @@
 }
 
 .selected-option {
-  font-size: 16px;
+  font-size: 14px;
   width: 100%;
-  background: #fff;
-  color: #2a2a2a;
-  padding: 12px 16px;
-  border: none;
-  border-radius: 24px;
+  background: white;
+  color: #1f2937;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   cursor: pointer;
-  text-align: center;
-  font-weight: 600;
+  text-align: left;
+  font-weight: 400;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* Dark mode support */
+.dark .selected-option {
+  background: #374151;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+.dark .selected-option:hover {
+  background: #4b5563;
+  border-color: #6b7280;
+}
+
+.dark .selected-option:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.dark .selected-option.disabled,
+.dark .selected-option:disabled {
+  background: #4b5563;
+  color: #6b7280;
+  border-color: #4b5563;
+}
+
+.dark .options-list {
+  background: #374151;
+  color: #f9fafb;
+  border-color: #4b5563;
+}
+
+.dark .option-item:hover,
+.dark .option-item:focus {
+  background: #4b5563;
+  color: #f9fafb;
+}
+
+.dark .option-item.selected {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.dark .option-item.selected:hover {
+  background: #2563eb;
+}
+
+.dark .options-list::-webkit-scrollbar-track {
+  background: #4b5563;
+}
+
+.dark .options-list::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark .options-list::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.dark .options-list::-webkit-scrollbar-thumb:active {
+  background: #d1d5db;
 }
 
 .selected-option:hover {
-  background: #eee;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: #f9fafb;
+  border-color: #d1d5db;
 }
 
 .selected-option:focus {
-  outline: 2px solid #4285f4;
-  outline-offset: 2px;
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .selected-option.disabled,
 .selected-option:disabled {
-  background: #6a6a6a;
-  color: #999;
+  background: #f3f4f6;
+  color: #9ca3af;
   cursor: not-allowed;
   opacity: 0.6;
+  border-color: #e5e7eb;
 }
 
 .selected-option.disabled:hover,
 .selected-option:disabled:hover {
-  background: #6a6a6a;
-  transform: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: #f3f4f6;
+  border-color: #e5e7eb;
 }
 
 .options-list {
@@ -54,18 +119,18 @@
   position: absolute;
   left: 0;
   right: 0;
-  background: #fff;
-  color: #2a2a2a;
+  background: white;
+  color: #1f2937;
   z-index: 1000;
   list-style: none;
-  border: 1px solid #555;
-  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
   max-height: 280px;
   overflow-y: auto;
-  text-align: center;
-  padding: 8px 0;
-  margin-top: 8px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  text-align: left;
+  padding: 4px 0;
+  margin-top: 4px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -76,21 +141,21 @@
 }
 
 .option-item {
-  padding: 12px 16px;
+  padding: 8px 12px;
   cursor: pointer;
-  border-radius: 8px;
-  margin: 2px 8px;
+  border-radius: 4px;
+  margin: 2px 4px;
   transition: all 0.2s ease;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
 }
 
 .option-item:hover,
 .option-item:focus {
-  background: #eee;
-  color: #2a2a2a;
+  background: #f3f4f6;
+  color: #1f2937;
   outline: none;
-  transform: translateX(2px);
 }
 
 .option-item.selected {
@@ -109,29 +174,28 @@
 }
 
 .options-list::-webkit-scrollbar-track {
-  background: #eee;
+  background: #f9fafb;
   border-radius: 4px;
   margin: 8px 0;
 }
 
 .options-list::-webkit-scrollbar-thumb {
-  background: #eee;
+  background: #d1d5db;
   border-radius: 4px;
-  border: 1px solid #555;
 }
 
 .options-list::-webkit-scrollbar-thumb:hover {
-  background: #eee;
+  background: #9ca3af;
 }
 
 .options-list::-webkit-scrollbar-thumb:active {
-  background: #666;
+  background: #6b7280;
 }
 
 /* Firefox scrollbar */
 .options-list {
   scrollbar-width: thin;
-  scrollbar-color: #666 #eee;
+  scrollbar-color: #d1d5db #f9fafb;
 }
 
 /* Animation for smooth opening */
@@ -154,11 +218,11 @@
 @media (max-width: 640px) {
   .selected-option {
     font-size: 14px;
-    padding: 10px 14px;
+    height: 36px;
   }
   
   .option-item {
-    padding: 10px 14px;
+    padding: 8px 12px;
     font-size: 14px;
   }
   
